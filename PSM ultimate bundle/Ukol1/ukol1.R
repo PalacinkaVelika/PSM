@@ -35,9 +35,17 @@ plot(TukeyHSD(aov(jazykovy_test~factor(kategorie))))
 UScereal
 
 cereal_data <- UScereal
+cereal_data <- subset(cereal_data, select = c("calories", "protein", "fat", "sodium", "fibre", "carbo", "sugars", "potassium"))
 cereal_data
-cereal <- cereal_data[, c("calories", "protein", "fat", "sodium" , "fibre", "carbo","sugars", "potassium", "vitamins")]
-cereal$vitamins <- as.numeric(factor(cereal$vitamins))
+
+hc <- hclust(dist(cereal_data))
+plot(hc, hang = -1)
+# Určení počtu shluků 
+k <- 4
+plot(hc)
+rect.hclust(hc, k)
+
+
 
 truncated_row_names <- substr(rownames(cereal), 1, 7)
 cereal.hc <- hclust(dist(cereal), "ave")
@@ -59,7 +67,6 @@ plot(cereal$calories, cereal$sugars, col=seg.sc, pch=19, main="Kalorie vs Cukry"
 plot(cereal$calories, cereal$carbo, col=seg.sc, pch=19, main="Kalorie vs Sacharidy")
 plot(cereal$calories, cereal$fiber, col=seg.sc, pch=19, main="Kalorie vs Vláknina")
 plot(cereal$calories, cereal$fat, col=seg.sc, pch=19, main="Kalorie vs Tuky")
-
 
 ## Vysledky ciselnych testu namerenych v datovem souboru UScereals znazornete vhodnym grafem. 
 # K jeho vykresleni vyuzijte faktorovou analyzu, pripadne hlavni komponenty, pokud vhodne faktory nebude mozno vytvorit.
