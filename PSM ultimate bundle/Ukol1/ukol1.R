@@ -60,7 +60,6 @@ rect.hclust(hc, k)
 # K jeho vykresleni vyuzijte faktorovou analyzu, pripadne hlavni komponenty, pokud vhodne faktory nebude mozno vytvorit.
 fact_anal <- factanal(~., data = cereal_data, factors = 4,scores = "Bartlett")
 fact_anal
-
 # Závěr
 #Faktor 1: Nutriční hodnoty
 
@@ -79,22 +78,3 @@ fact_anal
 #Tento faktor má vysokou váhu pro cukry (sugars).
 #Ukazuje, že cukry jsou samostatnou složkou, která může být v cereáliích přítomna nezávisle na ostatních nutričních hodnotách.
 
-
-
-
-
-sc <- factanal(~., data = cereal, factors = 5, scores="Bartlett")$scores
-plot(sc[,1],sc[,2],pch=19, main="První 2 faktory")
-## vizualizace při diskretizaci proměnných (hrozný způsob diskretizace)
-cereal.short <- cereal_data[, c("calories", "protein", "fat", "carbo","sugars")]
-sc.sh <- factanal(~., data = cereal.short, factors = 2, scores="Bartlett")$scores
-plot(sc.sh[,1],sc.sh[,2],pch=19, main="První 2 faktory")
-loading_plot <- biplot(sc, sc, cex = 0.7)
-library(gplots)
-heatmap.2(abs(fact_anal$loadings), 
-          Colv = NA, Rowv = NA, 
-          col = colorRampPalette(c("white", "blue"))(100), 
-          scale = "none",
-          margins = c(5,10),
-          main = "Heatmap zatížení proměnných na faktory",
-          cexCol = 1)
