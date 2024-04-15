@@ -1,0 +1,157 @@
+---
+title: "PSM - Ukol 1"
+output: html_notebook
+author: Josef Bér
+---
+
+# Část 1
+
+## Zadání
+
+-   V datech nlschools z knihovny MASS rozhodnete, zda vysledky jazykovych testu zavisi na socioekonomickem statusu. Vysledek jazykoveho testu najdete v promenne lang, socioekonomicky status v promenne SES. U socioekonomickeho statusu porovnavejte pouze 5 skupin vytvorenych podle pocatecni cislice promenne SES. Ohodnotte jak statistickou, tak vecnou vyznamnost, a to nejen celkove pro promennou SES, ale i pro rozdily vsech dvojic socioekonomickych statusu.
+
+## Postup
+
+### 1) načtení knihoven
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+library(MASS)
+library(DescTools)
+```
+
+### 2) načtení správných proměnných 
+
+```{r}
+jazykovy_test <- nlschools$lang
+socioeko_status <- nlschools$SES
+# vykreslení prvních deseti hodnot ať vím s čím pracuji
+head(jazykovy_test, 10)
+head(socioeko_status, 10)
+```
+
+### 3) převod socioekonomického statusu na  5 kategorií podle zadání
+
+```{r}
+kategorie <- factor(socioeko_status, levels = levels(kategorie)[1:5])
+```
+
+### 4) test normality
+
+```{r}
+res<-residuals(lm(jazykovy_test~kategorie))
+PlotQQ(res)
+shapiro.test(res) 
+```
+
+Kvůli tomu, abych zjistil jaký typ testu mohu využít si nejdříve potřebuji zjistit normalitu dat. Testuji residua nejdříve pomocí QQplot, který mi naznačuje levo šikmost rozdělení. Shapiro test potvrzuje, že data nejsou normálně rozdělena (p-hodnota = 0.02), tím že zamítá nulovou hypotézu, která tvrdí, že data mají normální rozdělení.
+
+### 5) test variability (statisticky významná rozdílnost)
+
+```{r}
+boxplot(jazykovy_test~kategorie,main="vysledky testu podle socioeko statusu",col="orange")
+```
+
+Podle boxplotu jde vidět, že by pravděpodobně měli existovat statisticky vznamné rozdíly mezi některými kategoriemy.
+
+```{r}
+oneway.test(jazykovy_test~kategorie, var.equal = FALSE)
+```
+
+Vzhledem k šikmosti rozdělení k analýze rozptylu využiju Kruskal-Wallisův test, který je alternativou ANOVA testu. Jeho nulová hypotéza, která tvrdí, že mediány všech skupin jsou stejné byla zamítnuta (p-hodnota = 0.0007558) a to nám ukazuje, že existuje minimálně jedna dvojice se statisticky významnou rozdílností.
+
+### 6) věcná významnost
+
+```{r warning=FALSE}
+TukeyHSD(aov(jazykovy_test~factor(kategorie), var.equal = FALSE))
+plot(TukeyHSD(aov(jazykovy_test~factor(kategorie))))
+```
+
+Z p-hodnot jde vidět, že věcně významné jsou rozdíly mezi skupinami:
+
+10 - 15 a 10 - 18
+
+Při pohledu na box-plot jde vidět, že tento závěr dává smysl.
+
+# Část 2
+
+## Zadání
+
+-   Pokuste se cerealni vyrobky hodnocene v datovem sobouru UScereal v knihovne MASS rozdelit do skupin podle meritelnych parametru. Vyzkousejte vice deleni a vyberte to, ktere Vam prijde optimalni.
+
+```{r message=FALSE, warning=FALSE}
+cereal_data <- UScereal
+cereal_data <- subset(cereal_data, select = c("calories", "protein", "fat", "sodium", "fibre", "carbo", "sugars", "potassium"))
+```
+
+Z datasetu jsem si vybral pouze sloupce u kterých jsem se rozhodl, že jejich hodnoty mají smysl:
+
+"Calories" - Kalorie
+"Protein" - Bílkoviny
+"Fat" - Tuky
+"Sodium" - Sodík
+"Fibre" - Vláknina
+"Carbo" - Sacharidy
+"Sugars" - Cukry
+"Potassium" - Draslík
+
+```{r}
+hc <- hclust(dist(cereal_data))
+plot(hc, hang = -1)
+# vidím outliery který jsou specialozovany na nějakou proměnnou a rozhodnul jsem se jich zbavit pro tuto analýzu
+```
+
+Protože zde působí mnoho proměnných rozhodl jsem se pro hierarchickou shlukovou analýzu. Z dendrogramu jde vidět, že pár cereálií působí jako outliery oproti ostatním cereáliím - "Grape-Nuts", "All-Bran", "100% Bran", "All-Bran with Extra Fiber". Už z názvu jde poznat, že jde o velmi specifické značky co se specializují na nějakou hlavní složku, naproti tomu ostatní cereálie mají přibližně vyvážené všechny hodnoty. Pro zesnadnění další práce jsem se rozhodl tyto outliery odstranit.
+
+```{r}
+
+cereal_data <- cereal_data[!(rownames(cereal_data) %in% c("Grape-Nuts", "All-Bran", "100% Bran", "All-Bran with Extra Fiber")), ]
+hc <- hclust(dist(cereal_data))
+plot(hc, hang = -1)
+```
+
+```{r}
+k <- 5
+plot(hc)
+rect.hclust(hc, k)
+```
+
+Z nového dendrogramu, který vznikl po odstranění outlierů, jsem se rozhodl, že je zde 5 hlavních shluků.
+
+Protože jde o dataset, kde má vliv mnoho různých proměnných najednou, mi nedává smysl použít k-means nebo jiný dvoudimensionální přístup.
+
+# Část 3
+
+## Zadání
+
+-   Vysledky ciselnych testu namerenych v datovem souboru UScereals znazornete vhodnym grafem. K jeho vykresleni vyuzijte faktorovou analyzu, pripadne hlavni komponenty, pokud vhodne faktory nebude mozno vytvorit.
+
+```{r}
+fact_anal <- factanal(~., data = cereal_data, factors = 4,scores = "Bartlett")
+fact_anal
+```
+
+Z faktorové analýzy mi vyšly 4 faktory:
+
+Faktor 1: Nutriční hodnoty
+
+Tento faktor má vysoké váhy pro vlákninu (fibre), draslík (potassium) a bílkoviny (protein).
+
+Může představovat zdravé složky v cereáliích, které jsou bohaté na vlákninu, bílkoviny a minerály.
+
+Faktor 2: Energetické složky
+
+Tento faktor má vysoké váhy pro kalorie (calories) a tuky (fat).
+
+Může indikovat energetickou hustotu cereálií, kde vyšší hodnoty mohou znamenat větší kalorickou hodnotu a obsah tuků.
+
+Faktor 3: Složení uhlohydrátů
+
+Tento faktor má vysoké váhy pro sacharidy (carbo).
+
+Naznačuje, že cereálie s vyšším obsahem sacharidů mohou být spojeny s vyšším obsahem sodíku.
+
+Faktor 4: Obsah cukru
+
+Tento faktor má vysokou váhu pro cukry (sugars).
+
+Ukazuje, že cukry jsou samostatnou složkou, která může být v cereáliích přítomna nezávisle na ostatních nutričních hodnotách.

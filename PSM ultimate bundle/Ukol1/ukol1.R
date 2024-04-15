@@ -40,39 +40,50 @@ cereal_data
 
 hc <- hclust(dist(cereal_data))
 plot(hc, hang = -1)
-# Určení počtu shluků 
-k <- 4
+# vidím outliery který jsou specialozovany na nějakou proměnnou a rozhodnul jsem se jich zbavit pro tuto analýzu
+cereal_data <- cereal_data[!(rownames(cereal_data) %in% c("Grape-Nuts", "All-Bran", "100% Bran", "All-Bran with Extra Fiber")), ]
+hc <- hclust(dist(cereal_data))
+plot(hc, hang = -1)
+
+# Dává mi smysl 5 shluků podle dendodramu po odstraneni outlieru
+k <- 5
 plot(hc)
 rect.hclust(hc, k)
+# Protože jde o dataset kde má vliv hodně proměnných najednou mi nedává smysl použít k-means nebo jiný dvoudimensionální
+# přístup.
 
 
 
-truncated_row_names <- substr(rownames(cereal), 1, 7)
-cereal.hc <- hclust(dist(cereal), "ave")
-plot(cereal.hc, hang = -1, labels = truncated_row_names, cex = 0.5)
-rect.hclust(cereal.hc, k=8)
-seg <- cutree(cereal.hc, k=8)
-plot(cereal$calories, cereal$sugars, col=seg, pch=19, main="Kalorie vs Cukry")
-plot(cereal$calories, cereal$carbo, col=seg, pch=19, main="Kalorie vs Sacharidy")
-plot(cereal$calories, cereal$fiber, col=seg, pch=19, main="Kalorie vs Vláknina")
-plot(cereal$calories, cereal$fat, col=seg, pch=19, main="Kalorie vs Tuky")
-pc<-prcomp(cereal,scale=T)$x
-plot(pc[,1],pc[,2],col=seg,pch=19, main="Rozdělení podle dvou hlavních komponent") 
-cereal.sc <- scale(cereal)
-cereal.hc.sc <- hclust(dist(cereal.sc), "ave")
-plot(cereal.hc.sc, hang = -1, labels = truncated_row_names, cex = 0.5)
-rect.hclust(cereal.hc.sc,k=8)
-seg.sc <- cutree(cereal.hc.sc, k=8)
-plot(cereal$calories, cereal$sugars, col=seg.sc, pch=19, main="Kalorie vs Cukry")
-plot(cereal$calories, cereal$carbo, col=seg.sc, pch=19, main="Kalorie vs Sacharidy")
-plot(cereal$calories, cereal$fiber, col=seg.sc, pch=19, main="Kalorie vs Vláknina")
-plot(cereal$calories, cereal$fat, col=seg.sc, pch=19, main="Kalorie vs Tuky")
+
 
 ## Vysledky ciselnych testu namerenych v datovem souboru UScereals znazornete vhodnym grafem. 
 # K jeho vykresleni vyuzijte faktorovou analyzu, pripadne hlavni komponenty, pokud vhodne faktory nebude mozno vytvorit.
-fact_anal <- factanal(~., data = cereal, factors = 3)
+fact_anal <- factanal(~., data = cereal_data, factors = 4,scores = "Bartlett")
 fact_anal
-sc <- factanal(~., data = cereal, factors = 3, scores="Bartlett")$scores
+
+# Závěr
+#Faktor 1: Nutriční hodnoty
+
+#Tento faktor má vysoké váhy pro vlákninu (fibre), draslík (potassium) a bílkoviny (protein).
+#Může představovat zdravé složky v cereáliích, které jsou bohaté na vlákninu, bílkoviny a minerály.
+#Faktor 2: Energetické složky
+
+#Tento faktor má vysoké váhy pro kalorie (calories) a tuky (fat).
+#Může indikovat energetickou hustotu cereálií, kde vyšší hodnoty mohou znamenat větší kalorickou hodnotu a obsah tuků.
+#Faktor 3: Složení uhlohydrátů
+
+#Tento faktor má vysoké váhy pro sacharidy (carbo) a v mírnější míře i pro sodík (sodium).
+#Naznačuje, že cereálie s vyšším obsahem sacharidů mohou být spojeny s vyšším obsahem sodíku.
+#Faktor 4: Obsah cukru
+
+#Tento faktor má vysokou váhu pro cukry (sugars).
+#Ukazuje, že cukry jsou samostatnou složkou, která může být v cereáliích přítomna nezávisle na ostatních nutričních hodnotách.
+
+
+
+
+
+sc <- factanal(~., data = cereal, factors = 5, scores="Bartlett")$scores
 plot(sc[,1],sc[,2],pch=19, main="První 2 faktory")
 ## vizualizace při diskretizaci proměnných (hrozný způsob diskretizace)
 cereal.short <- cereal_data[, c("calories", "protein", "fat", "carbo","sugars")]
