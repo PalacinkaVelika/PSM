@@ -1,0 +1,20 @@
+Pro ůvod bych se chtěl omluvit za původně odeslaný úkol, při opravách jsem si opravil mé výpisky z teorie a zhrozil jsem se jaké blbosti jsem tam napsal (Doufám že nyní tam bude blbostí úplné minimum :-) )
+
+OPRAVA 1
+"V prvním příkladu jste při vytváření proměnné kategorie pracoval pouze s prvními pěti socioekonomickými statusy. Já měla na mysli vytvořit nový socioekonomický status s hodnotami 1 až 5, kde 1 bude pro původní hodnoty od 10 do 19, 2 bude pro původní hodnoty 20 až 29, atd. Pokud si vytvoříte novou proměnnou jinak, nevadí mi t, ale nutné je, aby měla 5 různých hodnot (5 kategorií) a aby byl zachován počet všech pozorování (Vaším postupem jste použil pouze 467 hodnot z původních 2287)."
+-> Zde jsem nově kategorie rozdělil podle původního zadání ("U socioekonomickeho statusu porovnavejte pouze 5 skupin vytvorenych podle pocatecni cislice promenne SES.")
+
+"Pokud dále zamítnete normalitu, pak byste měl pro porovnání skupin použít Kruskal-Wallisův test, který zavoláte příkazem kruskal.test. Příkaz oneway.test počítá analýzu rozptylu pro normálně rozdělená data s různými rozptyly."
+-> Nyní správně používám Kruskal-Wallisův test + Dunnův test pro získání statistické významnosti
+
+"Do příkladu, prosím, doplňte ještě test shody rozptylů, např. Bartlettův test. Kruskal-Wallisův test porovnává střední hodnoty (to samé oneway.test). Ke všem použitým číselným testům, prosím, jasně specifikujte testované hypotézy (H0 i H1)."
+-> Dopsáno
+
+"Tukeyho test (příkaz TukeyHSD) netestuje věcnou významnost, ale dělá párové srovnání všech dvojic, pokud máte normálně rozdělená data. V případě, že data nemají normální rozdělení, používá se Dunnův test (příkaz DunnTest v knihovně DescTools). Věcnou významnost zkontrolujete pomocí některého z koeficientů v knihovně effectsize. Hodnotí se pouze jejich absolutní velikost (tedy nic se netestuje). Pro porovnání více výběrů používáme především Fisherovo eta nebo Haysovu omegu, pro porovnání dvou výběrů (např. u párového srovnání) používáme např. Cohenovo d."
+-> Využito Cohenovo D mezi páry skupin (mě samotného zaskočilo jaké blbosti jsem tam původně psal :-( )
+
+"Jen Vás ještě poprosím, abyste pro výsledné skupiny spočítal průměrnou hodnotu pro všechny vstupní proměnné a zkusil skupiny popsat pomocí těchto průměrů (např. skupinu 1 tvoří výrobky s velkým počtem kalorií, druhou skupinu tvoří zejména tučné výrobky, atd.)."
+-> Porovnání dopsáno
+
+"Mohl byste, prosím, na základě těchto faktorů nakreslit vhodné grafy pro reprezentaci Vašich dat? Jedná se o bodové grafy faktorových skórů, minimálně první faktor vs. druhý faktor, případně ještě první vs. třetí a druhý vs. třetí. Z těchto grafů pak bývá vidět, jak si jednotlivé výrobky stojí ve smyslu svého složení."
+-> Grafy přidány. 

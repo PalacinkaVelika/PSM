@@ -19,7 +19,7 @@ library(MASS)
 library(DescTools)
 ```
 
-### 2) načtení správných proměnných 
+### 2) načtení správných proměnných
 
 ```{r}
 jazykovy_test <- nlschools$lang
@@ -29,10 +29,11 @@ head(jazykovy_test, 10)
 head(socioeko_status, 10)
 ```
 
-### 3) převod socioekonomického statusu na  5 kategorií podle zadání
+### 3) převod socioekonomického statusu na 5 kategorií podle zadání
 
 ```{r}
-kategorie <- factor(socioeko_status, levels = levels(kategorie)[1:5])
+prvni_cislice <- as.integer(substr(socioeko_status, 1, 1))
+kategorie <- factor(prvni_cislice, levels = 1:5)
 ```
 
 ### 4) test normality
@@ -43,34 +44,73 @@ PlotQQ(res)
 shapiro.test(res) 
 ```
 
-Kvůli tomu, abych zjistil jaký typ testu mohu využít si nejdříve potřebuji zjistit normalitu dat. Testuji residua nejdříve pomocí QQplot, který mi naznačuje levo šikmost rozdělení. Shapiro test potvrzuje, že data nejsou normálně rozdělena (p-hodnota = 0.02), tím že zamítá nulovou hypotézu, která tvrdí, že data mají normální rozdělení.
+Protože chci zjistit statistickou a věcnou významnost pro 3+ skupin budu chtít využít ANOVA případně Kruskal testu. Abych zjistil, kterou variaci testu si vybrat musím zjistit normalitu reziduí, případně shodnost rozptylů.
 
-### 5) test variability (statisticky významná rozdílnost)
+Kromě QQ plotu, který mi ukazuje šikmost vlevo použiju ještě Shapiro-Wilkův test normality.
+
+-   **Nulová hypotéza** = data pocházejí z normálního rozdělení
+
+-   **Alternativní hypotéza** = data **nejsou** **normálně rozdělena**
+
+p = 1.294e-15 =\> p-hodnota je menší než 0.05, takže zamítám nulovou hypotézu a potvrzuji alternativní, data tedy nejsou normálně rozdělena
+
+### 5) shodnost rozptylu
 
 ```{r}
 boxplot(jazykovy_test~kategorie,main="vysledky testu podle socioeko statusu",col="orange")
+bartlett.test(jazykovy_test~kategorie)
+#  p-value = 1.03e-05 => rozptyl nejsou stejné
 ```
 
-Podle boxplotu jde vidět, že by pravděpodobně měli existovat statisticky vznamné rozdíly mezi některými kategoriemy.
+Kvůli nenormálního rozdělení dat využijeme Kruskal testu, který nemá přepoklad pro shodnost rozptylu. Přesto (podle zadání opravy) tento krok uděláme.
+
+Pro test shody rozptylů 3+ skupin využijeme Bartlettovo testu.
+
+-   **Nulová hypotéza** = rozptyly skupin jsou stejné
+
+-   **Alternativní hypotéza** = rozptyly skupin nejsou stejné
+
+p = 1.03e-05 =\> p-hodnota je menší než 0.05, takže zamítám nulovou hypotézu a potvrzuji alternativní, rozptyly skupin tedy nejsou stejné
+
+### 6) Statisticky významný rozdíl
 
 ```{r}
-oneway.test(jazykovy_test~kategorie, var.equal = FALSE)
+kruskal.test(jazykovy_test ~ kategorie) # průměry se liší
+DunnTest(jazykovy_test~kategorie)
 ```
 
-Vzhledem k šikmosti rozdělení k analýze rozptylu využiju Kruskal-Wallisův test, který je alternativou ANOVA testu. Jeho nulová hypotéza, která tvrdí, že mediány všech skupin jsou stejné byla zamítnuta (p-hodnota = 0.0007558) a to nám ukazuje, že existuje minimálně jedna dvojice se statisticky významnou rozdílností.
+Nyní Kruskal-Wallisův test, abychom zjistili jestli jsou průměry všech skupin stejné
 
-### 6) věcná významnost
+-   **Nulová hypotéza** = Průměry všech skupin jsou stejné
+
+-   **Alternativní hypotéza** = Průměry všech skupin nejsou stejné
+
+p-hodnota \< 2.2e-16 =\> Nulová hypotéza se zamítá, takže průměry skupin se liší
+
+Dále využiju Dunnův test, abych zjistil, které skupiny se liší.
+
+-   **Nulová hypotéza** = mezi skupinami není statisticky významný rozdíl
+
+-   **Alternativní hypotéza** = mezi skupinami je statisticky významný rozdíl
+
+Podle výsledku se liší všechny skupiny mezi sebou (p\<0.05).
+
+### 7) věcná významnost
 
 ```{r warning=FALSE}
-TukeyHSD(aov(jazykovy_test~factor(kategorie), var.equal = FALSE))
-plot(TukeyHSD(aov(jazykovy_test~factor(kategorie))))
+cohen.d(jazykovy_test ~ factor(kategorie, levels = c(levels(kategorie)[1], levels(kategorie)[2]))) # mid
+cohen.d(jazykovy_test ~ factor(kategorie, levels = c(levels(kategorie)[1], levels(kategorie)[3]))) # mid
+cohen.d(jazykovy_test ~ factor(kategorie, levels = c(levels(kategorie)[1], levels(kategorie)[4]))) # large
+cohen.d(jazykovy_test ~ factor(kategorie, levels = c(levels(kategorie)[1], levels(kategorie)[5]))) # large
+cohen.d(jazykovy_test ~ factor(kategorie, levels = c(levels(kategorie)[2], levels(kategorie)[3]))) # small
+cohen.d(jazykovy_test ~ factor(kategorie, levels = c(levels(kategorie)[2], levels(kategorie)[4]))) # mid
+cohen.d(jazykovy_test ~ factor(kategorie, levels = c(levels(kategorie)[2], levels(kategorie)[5]))) # mid
+cohen.d(jazykovy_test ~ factor(kategorie, levels = c(levels(kategorie)[3], levels(kategorie)[4]))) # small
+cohen.d(jazykovy_test ~ factor(kategorie, levels = c(levels(kategorie)[3], levels(kategorie)[5]))) # mid
+cohen.d(jazykovy_test ~ factor(kategorie, levels = c(levels(kategorie)[4], levels(kategorie)[5]))) # small
 ```
 
-Z p-hodnot jde vidět, že věcně významné jsou rozdíly mezi skupinami:
-
-10 - 15 a 10 - 18
-
-Při pohledu na box-plot jde vidět, že tento závěr dává smysl.
+Pro měření věcné významnosti využiji Cohenovo D mezi všemi páry.
 
 # Část 2
 
@@ -85,14 +125,7 @@ cereal_data <- subset(cereal_data, select = c("calories", "protein", "fat", "sod
 
 Z datasetu jsem si vybral pouze sloupce u kterých jsem se rozhodl, že jejich hodnoty mají smysl:
 
-"Calories" - Kalorie
-"Protein" - Bílkoviny
-"Fat" - Tuky
-"Sodium" - Sodík
-"Fibre" - Vláknina
-"Carbo" - Sacharidy
-"Sugars" - Cukry
-"Potassium" - Draslík
+"Calories" - Kalorie "Protein" - Bílkoviny "Fat" - Tuky "Sodium" - Sodík "Fibre" - Vláknina "Carbo" - Sacharidy "Sugars" - Cukry "Potassium" - Draslík
 
 ```{r}
 hc <- hclust(dist(cereal_data))
@@ -118,6 +151,14 @@ rect.hclust(hc, k)
 Z nového dendrogramu, který vznikl po odstranění outlierů, jsem se rozhodl, že je zde 5 hlavních shluků.
 
 Protože jde o dataset, kde má vliv mnoho různých proměnných najednou, mi nedává smysl použít k-means nebo jiný dvoudimensionální přístup.
+
+```{r}
+cereal_data$cluster <- cutree(hc, k)
+cluster_means <- aggregate(. ~ cluster, data = cereal_data, FUN = mean)
+print(cluster_means)
+```
+
+Z průměrů skupin jde vidět, že největší hodnoty všeho, kromě "sodium" (ve skupině 4) je ve skupině 3. Třetí skupina obsahuje nejvíc produktů, ale to podle mě není příčinou, nejspíše ostatní skupiny vznikly podobně velkými nedostatky, a třetí skupina vznikla právě vysokými hodnotami.
 
 # Část 3
 
@@ -155,3 +196,17 @@ Faktor 4: Obsah cukru
 Tento faktor má vysokou váhu pro cukry (sugars).
 
 Ukazuje, že cukry jsou samostatnou složkou, která může být v cereáliích přítomna nezávisle na ostatních nutričních hodnotách.
+
+```{r}
+par(mfrow = c(1, 3))
+
+plot(fact_anal$scores[,1], fact_anal$scores[,2], 
+     xlab = "Faktor 1 (Nutriční hodnoty)", ylab = "Faktor 2 (Energetické složky)",
+     main = "Faktorové skóry cereálií - F1 vs. F2")
+plot(fact_anal$scores[,1], fact_anal$scores[,3], 
+     xlab = "Faktor 1 (Nutriční hodnoty)", ylab = "Faktor 3 (Složení uhlohydrátů)",
+     main = "Faktorové skóry cereálií - F1 vs. F3")
+plot(fact_anal$scores[,2], fact_anal$scores[,3], 
+     xlab = "Faktor 2 (Energetické složky)", ylab = "Faktor 3 (Složení uhlohydrátů)",
+     main = "Faktorové skóry cereálií - F2 vs. F3")
+```
